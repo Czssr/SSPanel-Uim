@@ -8,6 +8,7 @@
 
 namespace App\Controllers;
 
+use App\Models\User;
 use App\Utils\ConfRender;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -28,7 +29,7 @@ class ConfController extends BaseController
      *
      * @return array|null
      */
-    public static function getMatchProxy($Proxy, $Rule)
+    public static function getMatchProxy(array $Proxy, array $Rule)
     {
         $return = null;
         switch (true) {
@@ -57,8 +58,7 @@ class ConfController extends BaseController
             case (!isset($Rule['content']['class'])
                 && !isset($Rule['content']['noclass'])
                 && isset($Rule['content']['regex'])
-                && preg_match('/' . $Rule['content']['regex'] . '/i', $Proxy['remark'])
-            ):
+                && preg_match('/' . $Rule['content']['regex'] . '/i', $Proxy['remark'])):
                 $return = $Proxy;
                 break;
         }
@@ -73,7 +73,7 @@ class ConfController extends BaseController
      *
      * @return array|string
      */
-    public static function YAML2Array($Content)
+    public static function YAML2Array(string $Content)
     {
         try {
             return Yaml::parse($Content);
@@ -88,20 +88,12 @@ class ConfController extends BaseController
      * @param User   $User          用户
      * @param string $AllProxys     Surge 格式的全部节点
      * @param array  $Nodes         节点数组
-     * @param string $SourceContent 配置内容
-     *
-     * @return string
+     * @param array  $Configs       配置内容
      */
-    public static function getSurgeConfs($User, $AllProxys, $Nodes, $Configs)
+    public static function getSurgeConfs(User $User, string $AllProxys, array $Nodes, array $Configs): string
     {
-        $General = (isset($Configs['General']) ? self::getSurgeConfGeneral($Configs['General']) : '');
-
-        $Proxys = (isset($Configs['Proxy']) ? self::getSurgeConfProxy($Configs['Proxy']) : '');
-
-        if (isset($Configs['Proxy Group'])) {
-            //兼容
-            $Configs['ProxyGroup'] = $Configs['Proxy Group'];
-        }
+        $General = (isset($Configs['General']) ? self::getConfGeneral($Configs['General']) : '');
+        $Proxys  = (isset($Configs['Proxy']) ? self::getConfProxy($Configs['Proxy']) : '');
         $ProxyGroups = self::getSurgeConfProxyGroup(
             $Nodes,
             $Configs['ProxyGroup']
@@ -136,52 +128,12 @@ class ConfController extends BaseController
     }
 
     /**
-     * Surge 配置中的 General
-     *
-     * @param array $General Surge General 定义
-     *
-     * @return string
-     */
-    public static function getSurgeConfGeneral($General)
-    {
-        $return = '';
-        if (count($General) != 0) {
-            foreach ($General as $key => $value) {
-                $return .= $key . ' = ' . $value . PHP_EOL;
-            }
-        }
-        return $return;
-    }
-
-    /**
-     * Surge 配置中的 Proxy
-     *
-     * @param array $Proxys 自定义配置中的额外 Proxy
-     *
-     * @return string
-     */
-    public static function getSurgeConfProxy($Proxys)
-    {
-        $return = '';
-        if (count($Proxys) != 0) {
-            foreach ($Proxys as $value) {
-                if (!preg_match('/(\[General|Replica|Proxy|Proxy\sGroup|Rule|Host|URL\sRewrite|Header\sRewrite|MITM|Script\])/', $value)) {
-                    $return .= $value . PHP_EOL;
-                }
-            }
-        }
-        return $return;
-    }
-
-    /**
      * Surge 配置中的 ProxyGroup
      *
      * @param array $Nodes       全部节点数组
      * @param array $ProxyGroups Surge 策略组定义
-     *
-     * @return array
      */
-    public static function getSurgeConfProxyGroup($Nodes, $ProxyGroups)
+    public static function getSurgeConfProxyGroup(array $Nodes, array $ProxyGroups): array
     {
         $return = [];
         foreach ($ProxyGroups as $ProxyGroup) {
@@ -215,10 +167,8 @@ class ConfController extends BaseController
      *
      * @param array $ProxyGroups 策略组
      * @param array $checks      要检查的策略组名
-     *
-     * @return array
      */
-    public static function fixSurgeProxyGroup($ProxyGroups, $checks)
+    public static function fixSurgeProxyGroup(array $ProxyGroups, array $checks): array
     {
         if (count($checks) == 0) {
             return $ProxyGroups;
@@ -256,10 +206,8 @@ class ConfController extends BaseController
      * Surge ProxyGroup 转字符串
      *
      * @param array $ProxyGroups Surge 策略组定义
-     *
-     * @return string
      */
-    public static function getSurgeProxyGroup2String($ProxyGroups)
+    public static function getSurgeProxyGroup2String(array $ProxyGroups): string
     {
         $return = '';
         foreach ($ProxyGroups as $ProxyGroup) {
@@ -307,13 +255,11 @@ class ConfController extends BaseController
     /**
      * 自定义配置文件生成 Clash 配置
      *
-     * @param object $User          用户
-     * @param array  $AllProxys     全部节点数组
-     * @param string $SourceContent 远程配置内容
-     *
-     * @return string
+     * @param User   $User      用户
+     * @param array  $AllProxys 全部节点数组
+     * @param string $Configs   远程配置内容
      */
-    public static function getClashConfs($User, $AllProxys, $Configs)
+    public static function getClashConfs($User, array $AllProxys, array $Configs): string
     {
         if (isset($Configs['Proxy']) && count($Configs['Proxy']) != 0) {
             $tmpProxys = array_merge($AllProxys, $Configs['Proxy']);
@@ -357,10 +303,8 @@ class ConfController extends BaseController
      *
      * @param array $Nodes       全部节点数组
      * @param array $ProxyGroups Clash 策略组定义
-     *
-     * @return array
      */
-    public static function getClashConfProxyGroup($Nodes, $ProxyGroups)
+    public static function getClashConfProxyGroup(array $Nodes, array $ProxyGroups): array
     {
         $return = [];
         foreach ($ProxyGroups as $ProxyGroup) {
@@ -403,10 +347,8 @@ class ConfController extends BaseController
      *
      * @param array $ProxyGroups 策略组
      * @param array $checks      要检查的策略组名
-     *
-     * @return array
      */
-    public static function fixClashProxyGroup($ProxyGroups, $checks)
+    public static function fixClashProxyGroup(array $ProxyGroups, array $checks): array
     {
         if (count($checks) == 0) {
             return $ProxyGroups;
@@ -441,13 +383,167 @@ class ConfController extends BaseController
     }
 
     /**
+     * 自定义配置文件生成 QuantumultX 托管配置
+     *
+     * @param User  $User    用户
+     * @param array $Configs 配置内容
+     */
+    public static function getQuantumultXConfs(User $User, array $Configs): string
+    {
+        $General = (isset($Configs['General']) ? self::getConfGeneral($Configs['General']) : '');
+        $Proxys  = (isset($Configs['Proxy']) ? self::getConfProxy($Configs['Proxy']) : '');
+        $ServerRemote = self::getQuantumultXConfServerRemote($User, $Configs['ServerRemote']);
+        $ProxyGroups  = self::getQuantumultXConfProxyGroup($Configs['ProxyGroup']);
+        $ProxyGroup   = self::getQuantumultXProxyGroup2String($ProxyGroups);
+        $Rule = self::getRule($Configs['Rule']);
+        $Conf = [
+            '#---------------------------------------------------#',
+            '## 上次更新于：' . date("Y-m-d h:i:s"),
+            '#---------------------------------------------------#',
+            '',
+            '[general]',
+            $General,
+            '',
+            '[server_local]',
+            $Proxys,
+            '',
+            '[server_remote]',
+            $ServerRemote,
+            '',
+            '[policy]',
+            $ProxyGroup,
+            '',
+            $Rule
+        ];
+
+        return implode(PHP_EOL, $Conf);
+    }
+
+    /**
+     * QuantumultX 配置中的 ServerRemote
+     *
+     * @param User  $user
+     * @param array $ServerRemote
+     */
+    public static function getQuantumultXConfServerRemote(User $user, array $ServerRemotes): string
+    {
+        $return = '';
+        $userSubUrl = LinkController::getSubinfo($user);
+        foreach ($ServerRemotes as $ServerRemote) {
+            $subUrl = str_replace(
+                [
+                    '%USERURL%',
+                ],
+                [
+                    $userSubUrl['link'],
+                ],
+                $ServerRemote['subUrl']
+            );
+            $tag = str_replace(
+                [
+                    '%APPNAME%',
+                ],
+                [
+                    $_ENV['appName'],
+                ],
+                $ServerRemote['tag']
+            );
+            $as_policy = (isset($ServerRemote['as-policy']) && $ServerRemote['as-policy'] != '' ? ', as-policy = ' . $ServerRemote['as-policy'] : '');
+            $img_url   = (isset($ServerRemote['img-url']) && $ServerRemote['img-url'] != '' ? ', img-url = ' . $ServerRemote['img-url'] : '');
+            $enabled   = (isset($ServerRemote['enabled']) && $ServerRemote['enabled'] != '' ? ', enabled = ' . $ServerRemote['enabled'] : '');
+            $return   .= $subUrl . ', tag = ' . $tag . $as_policy . $img_url . $enabled . PHP_EOL;
+        }
+        return $return;
+    }
+
+    /**
+     * QuantumultX 配置中的 ProxyGroup
+     *
+     * @param array $Nodes       全部节点数组
+     * @param array $ProxyGroups QuantumultX 策略组定义
+     */
+    public static function getQuantumultXConfProxyGroup(array $ProxyGroups): array
+    {
+        $return = [];
+        foreach ($ProxyGroups as $ProxyGroup) {
+            if (in_array($ProxyGroup['type'], ['static', 'available', 'round-robin'])) {
+                $proxies = [];
+                if (
+                    isset($ProxyGroup['content']['left-proxies'])
+                    && count($ProxyGroup['content']['left-proxies']) != 0
+                ) {
+                    $proxies = $ProxyGroup['content']['left-proxies'];
+                }
+                if (isset($ProxyGroup['content']['right-proxies'])) {
+                    $proxies = array_merge($proxies, $ProxyGroup['content']['right-proxies']);
+                }
+                $ProxyGroup['proxies'] = $proxies;
+            }
+            $return[] = $ProxyGroup;
+        }
+
+        return $return;
+    }
+
+    /**
+     * QuantumultX ProxyGroup 转字符串
+     *
+     * @param array $ProxyGroups QuantumultX 策略组定义
+     */
+    public static function getQuantumultXProxyGroup2String(array $ProxyGroups): string
+    {
+        $return = '';
+        foreach ($ProxyGroups as $ProxyGroup) {
+            $str = '';
+            if (in_array($ProxyGroup['type'], ['static', 'available', 'round-robin'])) {
+                $str .= ($ProxyGroup['type'] . ' = ' . $ProxyGroup['name'] . ', ' . implode(', ', $ProxyGroup['proxies']));
+                if (isset($ProxyGroup['img-url'])) {
+                    $str .= (', img-url = ' . $ProxyGroup['img-url']);
+                }
+            }
+            $return .= $str . PHP_EOL;
+        }
+        return $return;
+    }
+
+    /**
+     * Surge & QuantumultX 配置中的 General
+     *
+     * @param array $General General 定义
+     */
+    public static function getConfGeneral(array $General): string
+    {
+        $return = '';
+        if (count($General) != 0) {
+            foreach ($General as $key => $value) {
+                $return .= $key . ' = ' . $value . PHP_EOL;
+            }
+        }
+        return $return;
+    }
+
+    /**
+     * Surge & QuantumultX 配置中的 Proxy
+     *
+     * @param array $Proxys 自定义配置中的额外 Proxy
+     */
+    public static function getConfProxy(array $Proxys): string
+    {
+        $return = '';
+        if (count($Proxys) != 0) {
+            foreach ($Proxys as $value) {
+                $return .= $value . PHP_EOL;
+            }
+        }
+        return $return;
+    }
+
+    /**
      * 规则加载
      *
      * @param array $Rules 规则加载地址
-     *
-     * @return string
      */
-    public static function getRule($Rules)
+    public static function getRule(array $Rules)
     {
         $render = ConfRender::getTemplateRender();
         return $render->fetch($Rules['source']);

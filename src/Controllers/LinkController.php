@@ -757,7 +757,12 @@ class LinkController extends BaseController
      */
     public static function getQuantumultX($user, $quantumultx, $opts, $Rule)
     {
-        return '';
+        if (isset($opts['profiles']) && in_array($opts['profiles'], array_keys($_ENV['QuantumultX_DefaultProfiles']))) {
+            $Profiles = $opts['profiles'];
+        } else {
+            $Profiles = $_ENV['QuantumultX_DefaultProfiles'];
+        }
+        return ConfController::getQuantumultXConfs($user, $_ENV['QuantumultX_DefaultProfiles'][$Profiles]);
     }
 
     /**

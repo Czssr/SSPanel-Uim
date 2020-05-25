@@ -440,3 +440,58 @@ $_ENV['Surfboard_Profiles'] = [
         ]
     ]
 ];
+
+/**
+ * QuantumultX 配置文件定义
+ */
+$_ENV['QuantumultX_Profiles'] = [
+    'default' => [
+        'ServerRemote' => [
+            // %USERURL% = 用户的订阅链接，不含后缀
+            // %APPNAME% = 站点名
+            // [
+            //     'tag'       => '%APPNAME% - SS',
+            //     'subUrl'    => '%USERURL%?sub=2',
+            //     'as-policy' => '',
+            //     'img-url'   => '',
+            //     'enabled'   => 'true',
+            // ],
+            // [
+            //     'tag'       => '%APPNAME% - SSR',
+            //     'subUrl'    => '%USERURL%?sub=1',
+            //     'as-policy' => '',
+            //     'img-url'   => '',
+            //     'enabled'   => 'true',
+            // ],
+            [
+                'tag'       => '%APPNAME%',
+                'subUrl'    => '%USERURL%?list=quantumultx',
+                'as-policy' => '',
+                'img-url'   => '',
+                'enabled'   => 'true',
+            ],
+        ],
+        'General' => [
+            'server_check_url'     => 'http://www.qualcomm.cn/generate_204',
+            'running_mode_trigger' => 'filter, filter',
+        ],
+        'Proxy' => [
+            // 可额外添加节点
+        ],
+        'ProxyGroup' => [
+            [
+                'name' => '全部节点',
+                'type' => 'static',     // QuantumultX 策略组类型
+                'content' => [
+                    // QuantumultX 此处仅支持 left-proxies
+                    'left-proxies' => [
+                        '🔰国外流量'
+                    ],
+                ]
+            ],
+        ],
+        'Rule' => [
+            'source' => 'quantumultx/default.tpl'
+        ]
+    ]
+];

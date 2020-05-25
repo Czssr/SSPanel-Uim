@@ -140,6 +140,7 @@ $_ENV['Clash_DefaultProfiles']      = 'default';                    //Clash 默�
 $_ENV['Surge_DefaultProfiles']      = 'default';                    //Surge 默认配置方案
 $_ENV['Surge2_DefaultProfiles']     = 'default';                    //Surge2 默认配置方案
 $_ENV['Surfboard_DefaultProfiles']  = 'default';                    //Surfboard 默认配置方案
+$_ENV['QuantumultX_DefaultProfiles']= 'default';                    //QuantumultX 默认配置方案
 
 
 //审计自动封禁设置--------------------------------------------------------------------------------------------
